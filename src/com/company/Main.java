@@ -8,34 +8,29 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
+        String again;
 
-        System.out.println("How many columns do you want the board to have?");
-        int columnsAmt = intInput();
-        System.out.println("How many rows do you want the board to have?");
-        int rowsAmt = intInput();
+        do {
+            System.out.println("How many columns do you want the board to have?");
+            int columnsAmt = intInput();
+            System.out.println("How many rows do you want the board to have?");
+            int rowsAmt = intInput();
 
-        String [][] board = boardInit(columnsAmt,rowsAmt);
+            String[][] board = boardInit(columnsAmt, rowsAmt);
+            String[][] viewBoard = viewableBoardSetup(columnsAmt, rowsAmt);
 
-        int movements = ((columnsAmt * rowsAmt) / 2) + 1;
-        int total = 0;
-        for (int i = 0; i < movements + 1; i++) {
-            int[] coords = coordGuess(columnsAmt, rowsAmt);
-            int treasureFound = 0;
-            for (int j = 0; j < columnsAmt; j++) {
-                for (int k = 0; k < rowsAmt; k++) {
-                    if (Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) > 0 && treasureFound  == 0) {
-                        total += Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) * 100;
-                        System.out.println("You have found treasure!!\nThere is " + Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) * 100 + " gold coins in the chest.\nYour total is now " + total + " gold coins\nYou have " + (movements - i) + " turns left.\n");
-                        board[coords[0] - 1][coords[1] - 1] = "0";
-                        treasureFound = 1;
-                    }
+            treasureCheck(columnsAmt, rowsAmt, board, viewBoard);
+
+            do {
+                System.out.println("Would you like to try again? y/n");
+                again = input.next();
+                if (!again.equals("y") && !again.equals("n")) {
+                    System.out.println("This is not a valid input\nPlease re-try\n");
+                } else {
+                    break;
                 }
-            }
-            if (treasureFound == 0) {
-                System.out.println("There was no treasure at those coordinates :(\nYou have " + (movements - i) + " turns left.\n");
-            }
-        }
-        System.out.println("\nThe hunt is over!\nYour total gold was " + total + " coins and you had " + movements + " turns left.");
+            } while (true);
+        } while (again.equals("y"));
     }
 
     static int intInput() {
@@ -55,11 +50,21 @@ public class Main {
         for (int i = 0; i < c; i++) {
             for (int j = 0; j < r; j++) {
                 board[i][j] = "0";
-                System.out.print(board[i][j]);
+            }
+        }
+        return board;
+    }
+    static String[][] viewableBoardSetup(int c, int r) {
+        String [][] viewBoard = new String[c][r];
+
+        for (int i = 0; i < c; i++) {
+            for (int j = 0; j < r; j++) {
+                viewBoard[i][j] = "[]";
+                System.out.print(viewBoard[i][j]);
             }
             System.out.println("");
         }
-        return board;
+        return viewBoard;
     }
     static String [][] coinPlacement(int c, int r, String [][] b) {
         Random random = new Random();
@@ -114,13 +119,12 @@ public class Main {
             }
             System.out.println("");
         }
-        System.out.println("");
         return b;
     }
     static int[] coordGuess(int c, int r) {
         int[] coords = new int[2];
-        int coordXGuess = 0;
-        int coordYGuess = 0;
+        int coordXGuess;
+        int coordYGuess;
         do {
             System.out.println("Enter the X coordinate (column):");
             coordXGuess = intInput();
@@ -138,5 +142,58 @@ public class Main {
         coords[0] = coordYGuess;
         coords[1] = coordXGuess;
         return coords;
+    }
+    static void treasureCheck(int c, int r, String [][] board, String [][] viewBoard) {
+        int movements = ((c * (r + 7) / 4) / 2) + 1;
+        int total = 0;
+        int[] coords = new int[2];
+        for (int i = 0; i < movements + 1; i++) {
+            coords = coordGuess(c, r);
+            int treasureFound = 0;
+            for (int j = 0; j < c; j++) {
+                for (int k = 0; k < r; k++) {
+                    if (Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) > 0 && treasureFound  == 0) {
+                        total += Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) * 100;
+                        System.out.println("You have found treasure!!\nThere is " + Integer.parseInt(board[coords[0] - 1][coords[1] - 1]) * 100 + " gold coins in the chest.\nYour total is now " + total + " gold coins\nYou have " + (movements - i) + " turns left.\n");
+                        viewBoard[coords[0] - 1][coords[1] - 1] = board[coords[0] - 1][coords[1] - 1];
+                        board[coords[0] - 1][coords[1] - 1] = "0";
+                        treasureFound = 1;
+                    }
+                }
+            }
+            if (treasureFound == 0) {
+                System.out.println("There was no treasure at those coordinates :(\nYou have " + (movements - i) + " turns left.\n");
+            }
+            if (movements - i > 0) {
+                for (int j = 0; j < c; j++) {
+                    for (int k = 0; k < r; k++) {
+                        System.out.print(viewBoard[j][k]);
+                    }
+                    System.out.println("");
+                }
+            }
+        }
+        System.out.println("This was your grid:");
+        for (int j = 0; j < c; j++) {
+            for (int k = 0; k < r; k++) {
+                System.out.print(viewBoard[j][k]);
+            }
+            System.out.println("");
+        }
+        for (int i = 0; i < c; i++) {
+            for (int j = 0; j < r; j++) {
+                if (Integer.parseInt(board[i][j]) > 0) {
+                    viewBoard[i][j] = board[i][j];
+                }
+            }
+        }
+        System.out.println("\nThis is the full treasure grid:");
+        for (int j = 0; j < c; j++) {
+            for (int k = 0; k < r; k++) {
+                System.out.print(viewBoard[j][k]);
+            }
+            System.out.println("");
+        }
+        System.out.println("\nThe hunt is over!\nYour total gold was " + total + " coins and you had " + movements + " turns.");
     }
 }
